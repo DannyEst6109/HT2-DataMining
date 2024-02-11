@@ -117,6 +117,7 @@ print(f"Silueta K-Means: {silueta_kmeans}")
 print(f"Silueta Hierarchical Clustering: {silueta_hc}")
 
 
+'''
 # 6. Interpretar los grupos
 # Descripción de grupos basada en medidas de tendencia central y tablas de frecuencia
 grupo_medias = datos_procesados.groupby('grupo').mean()
@@ -130,3 +131,4 @@ print("\nModa por Grupo:")
 print(grupo_moda)
 print("\nMedianas por Grupo:")
 print(grupo_mediana)
+'''
