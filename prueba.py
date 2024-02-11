@@ -7,6 +7,15 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cut_tree
 from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.preprocessing import StandardScaler
+# Análisis de tendencia al agrupamiento utilizando el estadístico de Hopkins
+from sklearn.neighbors import NearestNeighbors
+from random import sample
+from numpy.random import uniform
+import numpy as np
+from math import isnan
+
+
 
 # Configuración para mostrar gráficos en línea
 # %matplotlib inline
@@ -16,22 +25,25 @@ datos = pd.read_csv("movies.csv", encoding='ISO-8859-1')
 print(datos.head())
 
 # Seleccionar variables relevantes
-variables_no_aportan = ["id", "title", "homePage", "video", "director", 
-                        "productionCompany", "productionCountry", "actors", "actorsCharacter"]
-
-variables_aportan = ["popularity", "originalLanguage", "budget", "revenue", "runtime", 
-                     "genres", "genresAmount", "productionCoAmount", "productionCountriesAmount", 
-                     "releaseDate", "voteCount", "voteAvg", "actorsPopularity", 
-                     "actorsAmount", "castWomenAmount", "castMenAmount"]
+variables_no_aportan = ["Id", "title", "homePage", "video", "director", "productionCompany", "productionCountry", "actors", "actorsCharacter"]
+variables_aportan = ["popularity", "originalLanguage", "budget", "revenue", "runtime", "genres", "genresAmount", "productionCoAmount", "productionCountriesAmount", "releaseDate", "voteCount", "voteAvg", "actorsPopularity", "actorsAmount", "castWomenAmount", "castMenAmount"]
 
 datos_procesados = datos[variables_aportan]
 
-# Análisis de tendencia al agrupamiento utilizando el estadístico de Hopkins
-from sklearn.neighbors import NearestNeighbors
-from random import sample
-from numpy.random import uniform
-import numpy as np
-from math import isnan
+
+
+# Limpiar la columna 'releaseDate'
+datos_procesados['releaseDate'] = pd.to_datetime(datos_procesados['releaseDate'], errors='coerce')
+datos_procesados['releaseYear'] = datos_procesados['releaseDate'].dt.year
+datos_procesados['releaseMonth'] = datos_procesados['releaseDate'].dt.month
+datos_procesados['releaseDay'] = datos_procesados['releaseDate'].dt.day
+
+# Eliminar variables no numéricas
+datos_procesados = datos_procesados.select_dtypes(include=[np.number])
+
+# Escalar los datos
+scaler = StandardScaler()
+clustering = scaler.fit_transform(datos_procesados)
 
 def hopkins(X):
     d = X.shape[1]
@@ -58,7 +70,7 @@ def hopkins(X):
     return H
 
 # Preprocesamiento del dataset y análisis de tendencia al agrupamiento
-numericas = datos_procesados.drop([ 'originalLanguage', 'genres', 'releaseDate'], axis=1)
+numericas = datos_procesados.drop([ ], axis=1)
 numericas = numericas.apply(pd.to_numeric, errors='coerce')
 numericas = numericas.dropna()
 hopkins_statistic = hopkins(numericas)
