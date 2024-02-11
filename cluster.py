@@ -13,14 +13,16 @@ from sklearn.metrics import pairwise_distances
 from sklearn.manifold import MDS
 from sklearn.metrics import euclidean_distances
 from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity
+from sklearn.neighbors import NearestNeighbors
+from random import sample
+from numpy.random import uniform
+from math import isnan
 
 # Configuración de visualización
 pd.set_option('display.max_columns', None)
 
 # Cargar datos
 datos = pd.read_csv("movies.csv", encoding='latin-1')
-print(datos.head())
-
 
 # 1. Preprocesamiento del dataset
 # Variables que no aportan información
@@ -30,48 +32,48 @@ datos_procesados = datos.drop(variables_no_aportan, axis=1)
 # Variables que sí aportan información
 variables_aportan = ['popularity', 'originalTitle', 'originalLanguage', 'budget', 'revenue', 'runtime', 'genres', 'genresAmount', 'productionCoAmount', 'productionCountriesAmount', 'releaseDate', 'voteCount', 'voteAvg', 'actorsPopularity', 'actorsAmount', 'castWomenAmount', 'castMenAmount']
 
-#datos_procesados = datos.drop(variables_aportan, axis=1)
-
 datos_procesados = datos_procesados[variables_aportan]
 
 # 2. Análisis de la tendencia al agrupamiento
 # Estadístico de Hopkins
-from sklearn.neighbors import NearestNeighbors
-from random import sample
-from numpy.random import uniform
-import numpy as np
-from math import isnan
- 
 def hopkins(X):
     d = X.shape[1]
-    n = len(X) # rows
-    m = int(0.1 * n) # heuristic from article [1]
+    n = len(X)  # rows
+    m = int(0.1 * n)  # heuristic from article [1]
     nbrs = NearestNeighbors(n_neighbors=1).fit(X.values)
- 
+
     rand_X = sample(range(0, n, 1), m)
- 
+
     ujd = []
     wjd = []
     for j in range(0, m):
-        u_dist, _ = nbrs.kneighbors(uniform(np.amin(X,axis=0),np.amax(X,axis=0),d).reshape(1, -1), 2, return_distance=True)
+        u_dist, _ = nbrs.kneighbors(uniform(np.amin(X, axis=0), np.amax(X, axis=0), d).reshape(1, -1), 2, return_distance=True)
         ujd.append(u_dist[0][1])
         w_dist, _ = nbrs.kneighbors(X.iloc[rand_X[j]].values.reshape(1, -1), 2, return_distance=True)
         wjd.append(w_dist[0][1])
- 
+
     H = sum(ujd) / (sum(ujd) + sum(wjd))
     if isnan(H):
         print(ujd, wjd)
         H = 0
- 
+
     return H
 
 # Hopkins Statistic
 numericas = datos_procesados.drop(['originalTitle', 'originalLanguage', 'genres', 'releaseDate'], axis=1)
-
 numericas = numericas.apply(pd.to_numeric, errors='coerce')
-
-hopkins_statistic = hopkins(numericas)
 numericas = numericas.dropna()
+hopkins_statistic = hopkins(numericas)
+
+# Inicializa el modelo de KMeans
+kmeans = KMeans(n_clusters=6)
+
+# Ajusta el modelo y obtén las etiquetas de clúster
+labels = kmeans.fit_predict(numericas)
+print(len(labels))
+
+# Agrega las etiquetas como una nueva columna en 'datos_procesados'
+datos_procesados['grupo'] = labels  
 
 print("Hopkins Statistic:", hopkins_statistic)
 
