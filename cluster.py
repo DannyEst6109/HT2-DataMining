@@ -70,10 +70,9 @@ kmeans = KMeans(n_clusters=6)
 
 # Ajusta el modelo y obtén las etiquetas de clúster
 labels = kmeans.fit_predict(numericas)
-print(len(labels))
 
 # Agrega las etiquetas como una nueva columna en 'datos_procesados'
-datos_procesados['grupo'] = labels  
+datos_procesados['grupo'] = labels
 
 print("Hopkins Statistic:", hopkins_statistic)
 
